@@ -3,13 +3,13 @@
 #include <stdio.h>
 
 //Opérateur ternaire pour récupérer la hauteur, s'il ne trouve pas -1
-static int h(StationNode* n){ return n ? n->height : -1; }
+static int h(const StationNode* n){ return n ? n->height : -1; }
 
 //Mise à jour de h selon ses enfants
 static void upd(StationNode* n) {
-    //On la chercher la hauteur des enfants
+    //On va chercher la hauteur des enfants
     int hl = h(n->left), hr = h(n->right);
-    //On prend la hauteyur la plus grande et on ajoute le noeud actuel donc 1
+    //On prend la hauteyur la plus grande et on ajoute le Node actuel donc 1.
     n->height = (hl > hr ? hl : hr) + 1;
 }
 
@@ -17,7 +17,7 @@ static void upd(StationNode* n) {
 static StationNode* mk(int id, StationInfo in){
     //On alloue de l'espace
     StationNode* n = (StationNode*) malloc(sizeof *n);
-    //Si ça ne marche pas on retourne 0
+    //Si ça ne marche pas, on retourne 0
     if(!n) return 0;
     //On assigne id et in
     n->station_id = id;
@@ -210,3 +210,104 @@ void si_print_sideways(StationNode* r){
     si_print_sideways(r->left);
     depth--;
 }
+
+//---A5 Export Snapshot CSV---
+
+int si_export_csv_rec(StationNode* r, FILE* f) {
+    //Si le sous-arbre est vide, on renvoie 0
+    if (!r) return 0;
+    //On créé un count qui est le nombre de lignes
+    int count = 0;
+    //On parcourt à gauche
+    count += si_export_csv_rec(r->left, f);
+    //On écrit les infos de r
+    fprintf(
+        //Dans f, avec le format csv avec les propriétés de StationInfo
+        f,"%d,%d,%d,%d,%d\n",
+        r->station_id,
+        r->info.power_kW,
+        r->info.price_cents,
+        r->info.slots_free,
+        r->info.last_ts
+    );
+    //On a écrit une ligne donc +1
+    count++;
+    //Et on fait pareil pour la droite
+    count += si_export_csv_rec(r->right, f);
+    //On retourne le nombre de lignes ajoutées
+    return count;
+}
+
+//Import de l'AVL vers un csv trié par station_id
+//Sortie :
+// > 0 : c'est bon
+// -1 : Chemin invalide
+// -2 : Problème dans l'ouverture du fichier
+int si_export_csv(StationNode* r, const char* path) {
+    //On lit le fichier
+    if (!path) {
+        printf("[!!!] si_export_csv: Le chenmin est null\n");
+        return -1;
+    }
+    //On ouvre le fichier
+    FILE* f = fopen(path, "w");
+    //S'il y a un problème, on renvoie -2
+    if(!f) {
+        printf("[!!!] Impossible d'écrire sur %s\n", path);
+        return -2;
+    }
+    //On write les headers séparé par une virgule
+    fprintf(f, "id,power,price,slots,last_ts\n");
+    //On write via la récursive en in order et on retourne le nombre de lignes
+    int n = si_export_csv_rec(r, f);
+    //On ferme le fichier et on retourne
+    fclose(f);
+    return n;
+}
+//----------------------------
+
+//-----A2 Top-K par score------
+// Fonction récursive pour remplir le min-heap
+void si_top_k_by_score_rec(StationNode* r, int k, int* heap, int* ids, int* count, int alpha, int beta, int gamma){
+    //Si Node null, on retourne
+    if(!r) return;
+    //On visite le Node gauche
+    si_top_k_by_score_rec(r->left, k, heap, ids, count, alpha, beta, gamma);
+    //On calcule le score
+    int score = r->info.slots_free * alpha + r->info.power_kW * beta - r->info.price_cents * gamma;
+    //Si on peut encore mettre, on met la station dedans
+    if(*count < k){
+        //On met à jour les tableaux
+        heap[*count] = score;
+        ids[*count]  = r->station_id;
+        //On incrémente le count
+        (*count)++;
+    } else {
+        // trouver le plus petit score dans la boîte
+        int min_idx = 0;
+        for(int i = 1; i < k; i++)
+            if(heap[i] < heap[min_idx])
+                min_idx=i;
+        if(score > heap[min_idx]){
+            //On remplace le plus petit score
+            heap[min_idx] = score;
+            ids[min_idx]  = r->station_id;
+        }
+    }
+
+    //Et on visite le Node droit
+    si_top_k_by_score_rec(r->right, k, heap, ids, count, alpha, beta, gamma);
+}
+
+int si_top_k_by_score(StationNode* r, int k, int* out_ids, int alpha, int beta, int gamma){
+    if(!r || k <= 0) return 0;
+    int heap[k]; //liste de scores
+    int ids[k]; //liste d'id
+    int count = 0; //nombre de stations
+    si_top_k_by_score_rec(r, k, heap, ids, &count, alpha, beta, gamma);
+    // copie finale dans out_ids
+    for(int i = 0; i < count; i++)
+        out_ids[i] = ids[i];
+    return count;
+}
+//----------------------------

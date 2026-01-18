@@ -24,7 +24,7 @@ void add_to_mru(int veh_id, int station_id){
     SNode* c = VEH_MRU[veh_id].head;
     //On compte le nombre de valeurs
     while(c){ count++; c = c->next; }
-    //Si ça dépasse la limite fixée on supprime
+    //Si ça dépasse la limite fixée, on supprime
     if(count > MRU_CAP) ds_slist_remove_tail(&VEH_MRU[veh_id], &drop);
 }
 
@@ -35,9 +35,9 @@ void process_events(Queue* q, StationIndex* idx){
         //On va chercher un AVL par id
         StationNode* sn = si_find(idx->root, e.station_id);
         StationInfo info;
-        //Si on trouve on prend ses infos
+        //Si on trouve, on prend ses infos
         if(sn){ info=sn->info; }
-        //On lui assigne des valeurs par défaut, si y'a rien
+        //On lui assigne des valeurs par défaut, s'il n'y a rien
         else {
             info.power_kW = 50;
             info.price_cents = 300;
@@ -85,7 +85,7 @@ int main(void){
     int ids[64]; int k = si_to_array(idx.root, ids, 64);
     printf("\nStations satisfying rule: ");
     //Convertit l'AVL en tableau (in-order)
-    for(int i=0;i<k;i++){
+    for(int i = 0; i < k; i++){
         StationNode* s = si_find(idx.root, ids[i]);
         //Rechercher par id
         if(s && eval_rule_postfix(rule, 7, &s->info)) {
@@ -94,6 +94,23 @@ int main(void){
     }
     printf("\n");
     printf("MRU vehicle 3: "); ds_slist_print(&VEH_MRU[3]);
-    si_clear(&idx);
+    // si_clear(&idx);
+    //---A5 Export Snapshot CSV---
+    int n = si_export_csv(idx.root, "snapshot.csv");
+    if (n >= 0)
+        printf("[csv] %d lignes écrites\n", n);
+    else
+        printf("[csv] Export échoué\n");
+
+    //----------------------------
+    //-----A2 Top-K par score------
+
+    int top[5];
+    int k2 = si_top_k_by_score(idx.root, 5, top, 2, 1, 1);
+    printf("Top 5 des stations : ");
+    for(int i = 0; i < k2; i++) printf("%d ", top[i]);
+    printf("\n");
+
+    //----------------------------
     return 0;
 }

@@ -1,5 +1,6 @@
 #ifndef DS_STATION_INDEX_H
 #define DS_STATION_INDEX_H
+#include <stdio.h>
 
 typedef struct StationInfo {
     int power_kW;      /* puissance */
@@ -26,6 +27,9 @@ void si_add(StationIndex* idx, int id, StationInfo in); /* AVL insert : O(log n)
 int  si_delete(StationIndex* idx, int id);              /* AVL delete : O(log n) */
 int  si_to_array(StationNode* r, int* ids, int cap);    /* inorder fill : O(n)*/
 void si_print_sideways(StationNode* r);                 /* debug : O(n)*/
-void si_clear(StationIndex* idx);                       /* postorder free : O(n)*/
+void si_clear(StationIndex* idx);
+int si_export_csv(StationNode* r, const char* path);
+int si_export_csv_rec(StationNode* r, FILE* f);
+int si_top_k_by_score(StationNode* r, int k, int* out_ids, int alpha, int beta, int gamma);
 
 #endif
