@@ -94,6 +94,23 @@ int main(void){
     }
     printf("\n");
     printf("MRU vehicle 3: "); ds_slist_print(&VEH_MRU[3]);
+    //---A3 Filtrage Mixte (Pré-filtres + Postfix)---
+    printf(" MODULE A3 : ");
+    
+    char* rule[] = {"slots","1",">=","power","100",">=","&&"};
+    int results[300];
+    int count = filter_ids_with_rule(idx.root, rule, 7, results, 300, 100, 1    
+    );
+    
+    printf("Pré-filtres: power>=50, slots>=1\n");
+    printf("Règle postfix: (slots>=1) && (power>=50)\n");
+    printf("Stations trouvées: %d\n", count);
+    printf("Exemples: ");
+    for (int i = 0; i < count && i < 10; i++) {
+        printf("%d ", results[i]);
+    }
+    if (count > 10) printf("+");
+    printf("\n");
     // si_clear(&idx);
     //---A5 Export Snapshot CSV---
     int n = si_export_csv(idx.root, "snapshot.csv");
