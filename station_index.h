@@ -21,6 +21,10 @@ typedef struct StationIndex {
     StationNode* root;
 } StationIndex;
 
+
+//  A3 Filtre les stations d’un AVL selon pré-filtres + règle postfix et retourne leurs IDs.
+int filter_ids_with_rule(StationNode* r, char* toks[], int n_toks, int* out, int cap, int min_power, int min_slots);
+
 void si_init(StationIndex* idx);
 StationNode* si_find(StationNode* r, int id);           /* O(log n) */
 void si_add(StationIndex* idx, int id, StationInfo in); /* AVL insert : O(log n) */
