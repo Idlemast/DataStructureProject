@@ -210,7 +210,33 @@ void si_print_sideways(StationNode* r){
     si_print_sideways(r->left);
     depth--;
 }
+//---A3 Filtrage Mixte (Pré-filtres + Postfix)---
 
+// appel d'une fonction externe provenant de rules.c qu'on va utiliser dans notre fonction filter_ids_with_rule (eval_rule_postfix)
+extern int eval_rule_postfix(char* toks[], int n, StationInfo* info);
+
+int filter_ids_with_rule(StationNode* r, char* toks[], int n, int* out, int cap, int min_power, int min_slots) {
+    // Si l'arbre est vide, le tableau de sortie n'existe pas ou si c'est plein, on return 0
+    if (!r || !out || cap <= 0) return 0;
+    // On initialise count à 0
+    int count = 0;
+    
+    // Parcours gauche en premier en in-order
+    count += filter_ids_with_rule(r->left, toks, n, out + count, cap - count, min_power, min_slots);
+    
+
+    // Traitement du nœud actuel avec pré-filtres avant d'appliquer les filtres 
+    if (count < cap && r->info.power_kW >= min_power && r->info.slots_free >= min_slots) {        
+        if (eval_rule_postfix(toks, n, &r->info)) {
+            out[count++] = r->station_id;  
+        }
+    }
+    
+     // Parcours de la branche droite (toujours après avoir traité le nœud courant)
+    count += filter_ids_with_rule(r->right, toks, n, out + count, cap - count, min_power, min_slots);
+    
+    return count;
+}
 //---A5 Export Snapshot CSV---
 
 int si_export_csv_rec(StationNode* r, FILE* f) {
