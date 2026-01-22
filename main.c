@@ -82,6 +82,14 @@ void scenario_b1() {
         printf("%d ", top[i]);
     printf("\n");
 
+    char* rule[] = { "slots","1",">=","power","50",">=","&&" };
+    int filt[64];
+    int f = filter_ids_with_rule(idx.root, rule, 7, filt, 64, 50, 1);
+
+    printf("Candidats avant les évènements: ");
+    for (int i = 0; i < f; i++) printf("%d ", filt[i]);
+    printf("\n");
+
     // Pleins d'évènements
     for(int step = 0; step < 500; step++) {
         for(int i = 0; i < DS_EVENTS_COUNT; i++) {
@@ -95,6 +103,10 @@ void scenario_b1() {
     printf("Top-%d stations après événements : ", k2);
     for(int i = 0; i < k2; i++)
         printf("%d ", top[i]);
+    printf("\n");
+
+    printf("Candidats après les évènements :");
+    for (int i = 0; i < f; i++) printf("%d ", filt[i]);
     printf("\n");
 
     int export = si_export_csv(idx.root, "snapshot.csv");
@@ -111,9 +123,9 @@ int main(void){
     Queue q; q_init(&q);
 
     /* Load provided datasets (place files next to binary or run from project root) */
-    int c1 = ds_load_stations_from_csv("izivia_tp_subset.csv", &idx);
+    int c1 = ds_load_stations_from_csv("../izivia_tp_subset.csv", &idx);
     printf("CSV loaded: %d stations\n", c1);
-    int c2 = ds_load_stations_from_json("izivia_tp_min.json", &idx);
+    int c2 = ds_load_stations_from_json("../izivia_tp_min.json", &idx);
     printf("JSON loaded: %d stations (optional)\n", c2);
 
     for(int i = 0; i < DS_EVENTS_COUNT; i++) q_enqueue(&q, DS_EVENTS[i]);
@@ -122,27 +134,12 @@ int main(void){
     printf("\nAVL stations (sideways):\n");
     si_print_sideways(idx.root);
 
-    /* Simple rule: power>=50 && slots>=1 */
-    // char* rule[] = { "slots", "1", ">=", "power", "50", ">=", "&&" };
-    // int ids[64]; int k = si_to_array(idx.root, ids, 64);
-    // printf("\nStations satisfying rule: ");
-    // //Convertit l'AVL en tableau (in-order)
-    // for(int i = 0; i < k; i++){
-    //     StationNode* s = si_find(idx.root, ids[i]);
-    //     //Rechercher par id
-    //     if(s && eval_rule_postfix(rule, 7, &s->info)) {
-    //         printf("%d ", ids[i]);
-    //     }
-    // }
-    // printf("\n");
-    // printf("MRU vehicle 3: "); ds_slist_print(&VEH_MRU[3]);
     //---A3 Filtrage Mixte (Pré-filtres + Postfix)---
     printf(" MODULE A3 : ");
     
     char* rule[] = {"slots","1",">=","power","100",">=","&&"};
     int results[300];
-    int count = filter_ids_with_rule(idx.root, rule, 7, results, 300, 100, 1    
-    );
+    int count = filter_ids_with_rule(idx.root, rule, 7, results, 300, 100, 1);
     
     printf("Pré-filtres: power>=50, slots>=1\n");
     printf("Règle postfix: (slots>=1) && (power>=50)\n");
