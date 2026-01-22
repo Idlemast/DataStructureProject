@@ -62,6 +62,48 @@ void process_events(Queue* q, StationIndex* idx){
 
 int eval_rule_postfix(char* toks[], int n, StationInfo* info); /* from rules.c */
 
+void scenario_b1() {
+    printf("SCENARIO_B1\n");
+    StationIndex idx; si_init(&idx);
+    int k = 5;
+    int top[k];
+    Queue q; q_init(&q);
+
+    int load = ds_load_stations_from_csv("../izivia_tp_subset.csv", &idx);
+    // r = l'arbre
+    // k = le top 3, top 5
+    // out = tableau des k stations
+    // alpha = poids des places libres
+    // beta = poids de la puissance
+    // gamma = poids du prix
+    int k1 = si_top_k_by_score(idx.root, k, top, 4, 1, 1);
+    printf("Top-%d stations avant événements : ", k1);
+    for(int i = 0; i < k1; i++)
+        printf("%d ", top[i]);
+    printf("\n");
+
+    // Pleins d'évènements
+    for(int step = 0; step < 500; step++) {
+        for(int i = 0; i < DS_EVENTS_COUNT; i++) {
+            q_enqueue(&q, DS_EVENTS[i]);
+        }
+    }
+    //Mise à jour des stations
+    process_events(&q, &idx);
+
+    int k2 = si_top_k_by_score(idx.root, k, top, 4, 1, 1);
+    printf("Top-%d stations après événements : ", k2);
+    for(int i = 0; i < k2; i++)
+        printf("%d ", top[i]);
+    printf("\n");
+
+    int export = si_export_csv(idx.root, "snapshot.csv");
+    si_clear(&idx);
+    q_clear(&q);
+    printf("Export CSV : %d lignes écrites\n", export);
+}
+
+
 int main(void){
     for(int i=0;i<MAX_VEH;i++) ds_slist_init(&VEH_MRU[i]);
 
@@ -81,19 +123,19 @@ int main(void){
     si_print_sideways(idx.root);
 
     /* Simple rule: power>=50 && slots>=1 */
-    char* rule[] = { "slots", "1", ">=", "power", "50", ">=", "&&" };
-    int ids[64]; int k = si_to_array(idx.root, ids, 64);
-    printf("\nStations satisfying rule: ");
-    //Convertit l'AVL en tableau (in-order)
-    for(int i = 0; i < k; i++){
-        StationNode* s = si_find(idx.root, ids[i]);
-        //Rechercher par id
-        if(s && eval_rule_postfix(rule, 7, &s->info)) {
-            printf("%d ", ids[i]);
-        }
-    }
-    printf("\n");
-    printf("MRU vehicle 3: "); ds_slist_print(&VEH_MRU[3]);
+    // char* rule[] = { "slots", "1", ">=", "power", "50", ">=", "&&" };
+    // int ids[64]; int k = si_to_array(idx.root, ids, 64);
+    // printf("\nStations satisfying rule: ");
+    // //Convertit l'AVL en tableau (in-order)
+    // for(int i = 0; i < k; i++){
+    //     StationNode* s = si_find(idx.root, ids[i]);
+    //     //Rechercher par id
+    //     if(s && eval_rule_postfix(rule, 7, &s->info)) {
+    //         printf("%d ", ids[i]);
+    //     }
+    // }
+    // printf("\n");
+    // printf("MRU vehicle 3: "); ds_slist_print(&VEH_MRU[3]);
     //---A3 Filtrage Mixte (Pré-filtres + Postfix)---
     printf(" MODULE A3 : ");
     
@@ -129,5 +171,6 @@ int main(void){
     printf("\n");
 
     //----------------------------
+    scenario_b1();
     return 0;
 }
