@@ -340,12 +340,12 @@ int si_top_k_by_score(StationNode* r, int k, int* out_ids, int alpha, int beta, 
 
 // --- A1 Range Query (IDs dans [min_id, max_id]) ---
 
-int si_range_query_rec(StationNode* r, int min_id, int max_id, int* out, int cap, int* count){
+int si_range_ids_rec(StationNode* r, int min_id, int max_id, int* out, int cap, int* count){
     if(!r || *count >= cap) return 0;
 
     // Si la valeur min est à gauche, on explore
     if(r->station_id > min_id)
-        si_range_query_rec(r->left, min_id, max_id, out, cap, count);
+        si_range_ids_rec(r->left, min_id, max_id, out, cap, count);
 
     // Si le node est dans l’intervalle → on le prend
     if(r->station_id >= min_id && r->station_id <= max_id && *count < cap){
@@ -355,14 +355,14 @@ int si_range_query_rec(StationNode* r, int min_id, int max_id, int* out, int cap
 
     // Si la valeur max est à droite, on explore
     if(r->station_id < max_id)
-        si_range_query_rec(r->right, min_id, max_id, out, cap, count);
+        si_range_ids_rec(r->right, min_id, max_id, out, cap, count);
 
     return *count;
 }
 
-int si_range_query(StationNode* root, int min_id, int max_id, int* out, int cap){
+int si_range_ids(StationNode* root, int min_id, int max_id, int* out, int cap){
     int count = 0;
-    si_range_query_rec(root, min_id, max_id, out, cap, &count);
+    si_range_ids_rec(root, min_id, max_id, out, cap, &count);
     return count;
 }
 

@@ -66,10 +66,13 @@ void scenario_b1() {
     printf("SCENARIO_B1\n");
     StationIndex idx; si_init(&idx);
     int k = 5;
+    // int min_id = 1010, max_id = 1050;
+    // int range_ids[300];
     int top[k];
     Queue q; q_init(&q);
 
     int load = ds_load_stations_from_csv("../izivia_tp_subset.csv", &idx);
+    // int found = si_range_ids(&idx, min_id, max_id, range_ids, 300);
     // r = l'arbre
     // k = le top 3, top 5
     // out = tableau des k stations
@@ -100,8 +103,8 @@ void scenario_b1() {
     process_events(&q, &idx);
 
     //On sature artificiellement 1044 qui est le 1er du Top-K
-    // StationNode* s = si_find(idx.root, 1044);
-    // if (s){ s->info.slots_free = 0; }
+    StationNode* s = si_find(idx.root, 1044);
+    if (s){ s->info.slots_free = 0; }
 
     int k2 = si_top_k_by_score(idx.root, k, top, 20, 2, 1);
     printf("Top-%d stations après événements : ", k2);
@@ -125,11 +128,11 @@ void scenario_b1() {
 int main(void){
     // for(int i=0;i<MAX_VEH;i++) ds_slist_init(&VEH_MRU[i]);
     //
-    // StationIndex idx; si_init(&idx);
-    // Queue q; q_init(&q);
+    StationIndex idx; si_init(&idx);
+    Queue q; q_init(&q);
 
     /* Load provided datasets (place files next to binary or run from project root) */
-    // int c1 = ds_load_stations_from_csv("../izivia_tp_subset.csv", &idx);
+    int c1 = ds_load_stations_from_csv("../izivia_tp_subset.csv", &idx);
     // printf("CSV loaded: %d stations\n", c1);
     // int c2 = ds_load_stations_from_json("../izivia_tp_min.json", &idx);
     // printf("JSON loaded: %d stations (optional)\n", c2);
@@ -186,7 +189,7 @@ int main(void){
     int min_id = 1010;
     int max_id = 1050;
 
-    int found = si_range_query(idx.root, min_id, max_id, range_ids, 300);
+    int found = si_range_ids(idx.root, min_id, max_id, range_ids, 300);
 
     printf("IDs dans [%d, %d] = %d stations trouvées\n", min_id, max_id, found);
 
