@@ -93,6 +93,7 @@ void scenario_b1() {
     for (int i = 0; i < f; i++) printf("%d ", filt[i]);
     printf("\n");
 
+    //On sature artificiellement les ids entre 1010 et 1050
     int found = si_range_ids(idx.root, min_id, max_id, range_ids, 256);
     printf("Zone saturée [%d..%d] (%d stations)\n", min_id, max_id, found);
 
@@ -111,10 +112,6 @@ void scenario_b1() {
     }
     //Mise à jour des stations
     process_events(&q, &idx);
-
-    //On sature artificiellement 1044 qui est le 1er du Top-K
-    // StationNode* s = si_find(idx.root, 1044);
-    // if (s){ s->info.slots_free = 0; }
 
     int k2 = si_top_k_by_score(idx.root, k, top, 20, 2, 1);
     printf("Top-%d stations après événements : ", k2);
@@ -138,11 +135,11 @@ void scenario_b1() {
 int main(void){
     // for(int i=0;i<MAX_VEH;i++) ds_slist_init(&VEH_MRU[i]);
     //
-    StationIndex idx; si_init(&idx);
-    Queue q; q_init(&q);
+    // StationIndex idx; si_init(&idx);
+    // Queue q; q_init(&q);
 
     /* Load provided datasets (place files next to binary or run from project root) */
-    int c1 = ds_load_stations_from_csv("../izivia_tp_subset.csv", &idx);
+    // int c1 = ds_load_stations_from_csv("../izivia_tp_subset.csv", &idx);
     // printf("CSV loaded: %d stations\n", c1);
     // int c2 = ds_load_stations_from_json("../izivia_tp_min.json", &idx);
     // printf("JSON loaded: %d stations (optional)\n", c2);
@@ -193,20 +190,20 @@ int main(void){
     //-----A1 Range Query (ID)----
 
     // Test Range Query
-    printf("\n--- A1: Range Query Test ---\n");
+    //printf("\n--- A1: Range Query Test ---\n");
 
-    int range_ids[300];
-    int min_id = 1010;
-    int max_id = 1050;
-
-    int found = si_range_ids(idx.root, min_id, max_id, range_ids, 300);
-
-    printf("IDs dans [%d, %d] = %d stations trouvées\n", min_id, max_id, found);
-
-    for(int i = 0; i < found; i++){
-        printf("%d ", range_ids[i]);
-    }
-    printf("\n");
+    //int range_ids[300];
+    // int min_id = 1010;
+    // int max_id = 1050;
+    //
+    // int found = si_range_ids(idx.root, min_id, max_id, range_ids, 300);
+    //
+    // printf("IDs dans [%d, %d] = %d stations trouvées\n", min_id, max_id, found);
+    //
+    // for(int i = 0; i < found; i++){
+    //     printf("%d ", range_ids[i]);
+    // }
+    // printf("\n");
 
     //----------------------------
     scenario_b1();
