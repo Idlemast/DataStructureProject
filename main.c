@@ -71,6 +71,10 @@ void scenario_b1() {
     int top[k];
     Queue q; q_init(&q);
 
+    printf("Appuyez sur Entrée pour continuer");
+    getchar();
+    printf("On load le csv\n");
+
     int load = ds_load_stations_from_csv("../izivia_tp_subset.csv", &idx);
     // int found = si_range_ids(&idx, min_id, max_id, range_ids, 300);
     // r = l'arbre
@@ -79,11 +83,20 @@ void scenario_b1() {
     // alpha = poids des places libres
     // beta = poids de la puissance
     // gamma = poids du prix
+
+    printf("Appuyez sur Entrée pour continuer");
+    getchar();
+    printf("On affiche le top score selon des critères\n");
+
     int k1 = si_top_k_by_score(idx.root, k, top, 20, 2, 1);
     printf("Top-%d stations avant événements : ", k1);
     for(int i = 0; i < k1; i++)
         printf("%d ", top[i]);
     printf("\n");
+
+    printf("Appuyez sur Entrée pour continuer");
+    getchar();
+    printf("On affiche tout les ids\n");
 
     char* rule[] = { "slots","1",">=","power","50",">=","&&" };
     int filt[64];
@@ -92,6 +105,10 @@ void scenario_b1() {
     printf("Candidats avant les évènements: ");
     for (int i = 0; i < f; i++) printf("%d ", filt[i]);
     printf("\n");
+
+    printf("Appuyez sur Entrée pour continuer");
+    getchar();
+    printf("On sature une plage de ids, ici 1010 à 1050\n");
 
     //On sature artificiellement les ids entre 1010 et 1050
     int found = si_range_ids(idx.root, min_id, max_id, range_ids, 256);
@@ -110,6 +127,11 @@ void scenario_b1() {
             q_enqueue(&q, DS_EVENTS[i]);
         }
     }
+
+    printf("Appuyez sur Entrée pour continuer");
+    getchar();
+    printf("Mise à jour des évènements et affichage top stations\n");
+
     //Mise à jour des stations
     process_events(&q, &idx);
 
@@ -121,9 +143,17 @@ void scenario_b1() {
 
     int f2 = filter_ids_with_rule(idx.root, rule, 7, filt, 64, 50, 1);
 
+    printf("Appuyez sur Entrée pour continuer");
+    getchar();
+    printf("On filtre les ids après les évènements et avec le filtre excluant\n");
+
     printf("Candidats après les évènements :");
     for (int i = 0; i < f2; i++) printf("%d ", filt[i]);
     printf("\n");
+
+    printf("Appuyez sur Entrée pour continuer");
+    getchar();
+    printf("On export et on clear\n");
 
     int export = si_export_csv(idx.root, "snapshot.csv");
     si_clear(&idx);
