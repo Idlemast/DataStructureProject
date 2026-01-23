@@ -176,6 +176,26 @@ int main(void){
     // printf("\n");
 
     //----------------------------
+
+    //-----A1 Range Query (ID)----
+
+    // Test Range Query
+    printf("\n--- A1: Range Query Test ---\n");
+
+    int range_ids[300];
+    int min_id = 1010;
+    int max_id = 1050;
+
+    int found = si_range_query(idx.root, min_id, max_id, range_ids, 300);
+
+    printf("IDs dans [%d, %d] = %d stations trouvées\n", min_id, max_id, found);
+
+    for(int i = 0; i < found; i++){
+        printf("%d ", range_ids[i]);
+    }
+    printf("\n");
+
+    //----------------------------
     scenario_b1();
     return 0;
 }
