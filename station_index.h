@@ -35,6 +35,7 @@ void si_clear(StationIndex* idx);
 int si_export_csv(StationNode* r, const char* path);
 int si_export_csv_rec(StationNode* r, FILE* f);
 int si_top_k_by_score(StationNode* r, int k, int* out_ids, int alpha, int beta, int gamma);
-int si_range_ids(StationNode* root, int min_id, int max_id, int* out, int cap);
+int si_range_ids(StationNode* r, int lo, int hi, int* out, int cap);
+int si_count_ge_power(StationNode* r, int P);
 
 #endif
