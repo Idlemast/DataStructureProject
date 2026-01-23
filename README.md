@@ -5,82 +5,108 @@ BDML 2
 - William Wan
 - Teddy Rakotoarivelo
 
+Description générale
+Ce projet simule le fonctionnement d’un réseau de stations de recharge pour véhicules électriques. 
+Il combine des structures de données et des algorithmes afin de charger des données réelles, 
+organiser les stations dans une structure équilibrée, réaliser des requêtes de sélection et de filtrage, 
+simuler des événements dynamiques sur le réseau, puis exporter des résultats pour analyse.
 
-Ce projet simule le fonctionnement d’un réseau de stations de recharge pour véhicules électriques.
-Il combine des structures de données et des algorithmes afin de :
-- charger des données réelles depuis CSV/JSON,
-- organiser les stations dans un AVL,
-- réaliser des requêtes (range queries, filtrage, top-K),
-- simuler des événements dynamiques (branchement/débranchement),
-- exporter des snapshots d’état.
+Objectifs techniques
+- Charger des données depuis des fichiers externes (CSV et JSON)
+- Stocker efficacement les stations via une structure en AVL
+- Permettre des requêtes rapides sur les stations (range queries, filtrage, top-K)
+- Mettre à jour dynamiquement l’état des stations à travers des événements simulés
+- Exporter un snapshot de l’état final du réseau
 
+Données utilisées
+Le projet utilise trois types de fichiers :
+- izivia_tp_subset.csv : dataset principal contenant environ 300 stations
+- izivia_tp_min.json : dataset complémentaire contenant 10 stations supplémentaires
+- events.h : liste d’événements simulés représentant les branchements et débranchements de véhicules
 
-Données utilisées: 
-- izivia_tp_subset.csv → dataset principal (≈300 stations)
-- izivia_tp_min.json → dataset complémentaire (10 stations)
-- events.h → liste d’événements simulés (scénario)
+Chaque station possède plusieurs attributs, tels que : id de station, puissance en kW, nombre de slots libres, prix, opérateur, horodatage, etc.
 
-Les attributs d’une station incluent :
-puissance, slots libres, prix, horodatage, id, opérateur…
+Structures de données
+Plusieurs structures sont utilisées pour assurer performances et modularité :
+1. AVL Tree (arbre binaire équilibré)
+   Utilisé pour indexer les stations par station_id. Il permet :
+   - insertion en O(log n)
+   - recherche en O(log n)
+   - parcours trié implicite (in-order)
+   - extraction top-K
+   - filtrage
 
+2. File FIFO (Queue)
+   Utilisée pour stocker les événements dynamiques avant leur traitement.
 
-Structures de données:
-- AVL (Arbre binaire équilibré) : index station_id → StationInfo
-   → permet : insertion, recherche, top-K, filtrage
-- Liste chaînée (SList) : MRU des véhicules (dernières stations)
-- Queue (FIFO) : file d’événements à traiter
+3. Liste chaînée (SList)
+   Utilisée pour maintenir des listes MRU (Most Recently Used) pour suivre les dernières stations visitées par un véhicule.
 
-Le scénario B1 regroupe tous les modules dans un cycle avant → simulation → après :
+Modules A (analyse statique)
+Les modules A opèrent sur un réseau statique, c’est-à-dire uniquement basé sur les données chargées, sans simulation d’événements.
+Ils permettent un traitement analytique du réseau.
 
-1. Chargement des données
-ds_load_stations_from_csv(...)
+Module A1 : Range Query
+Ce module permet de sélectionner rapidement les stations dont l’identifiant est dans un intervalle donné (exemple : [1010..1050]). 
+Il est basé sur un parcours borné de l’AVL, ce qui réduit les coûts en ne visitant pas les branches inutiles.
 
-2. A2 — Top-K avant simulation
-Permet de voir le "meilleur classement" initial.
+Module A2 : Top-K
+Ce module permet de calculer un classement des stations selon un score composite basé généralement sur :
+- nombre de slots libres
+- puissance
+- prix
+Ce score permet de classer les stations avant/après simulation et d’observer des changements de comportement.
 
-3. A3 — Filtrage avant simulation
-Application pré-filtres + règle postfix.
+Module A3 : Filtrage avancé
+Ce module combine deux niveaux de filtrage :
+- des pré-filtres (ex : puissance >= 50, slots >= 1)
+- une règle postfix fournie sous forme de tokens, permettant une expression booléenne plus complexe
+Exemple de règle postfix : slots 1 >= power 50 >= &&
 
-4. A1 — Range Query pour saturation
-On sélectionne un intervalle d'IDs (ex: [1010..1050])
-puis on force slots_free = 0 → zone saturée
+Module A5 : Export CSV
+Ce module exporte l’état actuel de l’AVL dans un fichier snapshot.csv. 
+Ce snapshot permet d’archiver l’état du réseau après analyse ou après la simulation.
 
-5. Simulation B1
-On exécute des milliers d’événements :
-- process_events(&q, &idx);
-- Les slots et timestamps sont mis à jour.
+Module B (simulation dynamique)
+Contrairement aux modules A, le module B travaille sur un réseau dynamique. 
+Le scénario principal, appelé B1, simule le fonctionnement d’un réseau en conditions quasi réelles.
+Des événements successifs modifient les états des stations :
+- branchements : réduction du nombre de slots libres
+- débranchements : augmentation de slots libres
+- mise à jour de timestamps
+- suivi MRU des véhicules
 
-6. A2 / A3 — Après simulation
-- On vérifie l'impact de la simulation :
--le classement change (Top-K dynamique)
-- les candidats filtrés changent
+Organisation et enchaînement des modules dans B1
+Le scénario B1 s’exécute en plusieurs étapes :
+1. Chargement des données (CSV)
+2. Calcul du Top-K initial (A2)
+3. Filtrage initial (A3)
+4. Range Query et saturation d’une zone (A1)
+5. Simulation via traitement massif d’événements (B1)
+6. Re-calcul des métriques après simulation (A2/A3)
+7. Export final du snapshot (A5)
 
-7. A5 — Export final CSV
-Export de l’AVL en snapshot.csv.
+Intérêt de la combinaison des modules
+L'intérêt de cette organisation est d’illustrer :
+- l’état initial du réseau (statique)
+- l’effet de contraintes locales (saturation d’une zone via A1)
+- l’évolution du réseau dans le temps (simulation dynamique B1)
+- les impacts sur le classement (A2) et le filtrage (A3)
+- la possibilité de conserver l’état futur via export (A5)
 
-Intérêt de la combinaison
-Cette intégration permet de :
-- observer l’évolution dynamique du réseau
-- évaluer l’impact de la saturation
-- voir si les meilleures stations changent
-- comparer filtrage avant / après
-- avoir une trace finale exportée
+Résultats visibles lors de l'exécution
+L'exécution produit sur console :
+- un Top-K initial
+- un Top-K après simulation
+- un filtrage avant/après
+- un intervalle saturé via A1
+- un export snapshot.csv écrit
 
-Ce n’est pas juste de l’algorithme, c’est un scénario réaliste.
-
-Exécution
-
-Le programme affiche :
--Top-K avant / après
--Stations filtrées avant / après
--Intervalle saturé
--Export CSV final
- 
 Conclusion
--Le scénario B1 a été volontairement enrichi avec les modules A afin de créer une simulation cohérente :
-- A1 pour cibler une zone critique,
-- A2/A3 pour comparer l’état du réseau avant/après,
-- A5 pour garder une trace,
-- B1 pour la dynamique.
-
-Ce choix montre l’évolution du réseau sous contraintes, reproduisant des mécanismes proches d’un système réel.
+Ce projet met en œuvre des concepts d’algorithmique, de structures de données et de simulation.
+Le scénario B1 a été enrichi avec les modules A afin de fournir une simulation cohérente, où :
+- A1 sert à cibler une zone critique
+- A2 et A3 permettent de comparer des métriques avant/après
+- A5 archive l’état final
+- B1 fournit la dynamique
+Ce choix illustre le comportement d’un réseau de bornes sous contraintes, proche d'un système réel de recharge.
