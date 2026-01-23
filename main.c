@@ -66,8 +66,8 @@ void scenario_b1() {
     printf("SCENARIO_B1\n");
     StationIndex idx; si_init(&idx);
     int k = 5;
-    // int min_id = 1010, max_id = 1050;
-    // int range_ids[300];
+    int min_id = 1010, max_id = 1050;
+    int range_ids[300];
     int top[k];
     Queue q; q_init(&q);
 
@@ -93,6 +93,16 @@ void scenario_b1() {
     for (int i = 0; i < f; i++) printf("%d ", filt[i]);
     printf("\n");
 
+    int found = si_range_ids(idx.root, min_id, max_id, range_ids, 256);
+    printf("Zone saturée [%d..%d] (%d stations)\n", min_id, max_id, found);
+
+    for(int i = 0; i < found; i++){
+        StationNode* s = si_find(idx.root, range_ids[i]);
+        if(s){
+            s->info.slots_free = 0;  // saturation
+        }
+    }
+
     // Pleins d'évènements
     for(int step = 0; step < 5000; step++) {
         for(int i = 0; i < DS_EVENTS_COUNT; i++) {
@@ -103,8 +113,8 @@ void scenario_b1() {
     process_events(&q, &idx);
 
     //On sature artificiellement 1044 qui est le 1er du Top-K
-    StationNode* s = si_find(idx.root, 1044);
-    if (s){ s->info.slots_free = 0; }
+    // StationNode* s = si_find(idx.root, 1044);
+    // if (s){ s->info.slots_free = 0; }
 
     int k2 = si_top_k_by_score(idx.root, k, top, 20, 2, 1);
     printf("Top-%d stations après événements : ", k2);
